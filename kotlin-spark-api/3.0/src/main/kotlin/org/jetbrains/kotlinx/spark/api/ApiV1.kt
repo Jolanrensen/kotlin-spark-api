@@ -24,6 +24,7 @@ package org.jetbrains.kotlinx.spark.api
 import org.apache.spark.SparkContext
 import org.apache.spark.api.java.function.*
 import org.apache.spark.broadcast.Broadcast
+import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.*
 import org.apache.spark.sql.Encoders.*
 import org.apache.spark.sql.catalyst.encoders.ExpressionEncoder
@@ -369,3 +370,6 @@ class Memoize1<in T, out R>(val f: (T) -> R) : (T) -> R {
 private fun <T, R> ((T) -> R).memoize(): (T) -> R = Memoize1(this)
 
 private val memoizedSchema = { x: KType -> schema(x) }.memoize()
+
+/** Distribute a local Scala collection to form an RDD. */
+inline fun <reified T> SparkContext.parallelize(list: List<T>, numSlices: Int = defaultParallelism()): RDD<T> = TODO()
