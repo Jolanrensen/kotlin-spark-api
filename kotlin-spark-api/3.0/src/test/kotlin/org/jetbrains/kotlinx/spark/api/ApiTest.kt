@@ -324,6 +324,20 @@ class ApiTest : ShouldSpec({
                 val dataset = dsOf(Timestamp(0L) to 2)
                 dataset.show()
             }
+            should("be able to reduce groups") {
+                val groupedDataset = listOf(1 to "a", 1 to "b", 2 to "c")
+                    .toDS()
+                    .groupByKey { it.first }
+
+                val doesCompile = groupedDataset.reduceGroups(func = { v1, v2 ->
+                    v1.first + v2.first to v1.second + v2.second
+                })
+
+                val doesNotCompile = groupedDataset.reduceGroups { v1, v2 ->
+                    v1.first + v2.first to v1.second + v2.second
+                }
+
+            }
         }
     }
 })
