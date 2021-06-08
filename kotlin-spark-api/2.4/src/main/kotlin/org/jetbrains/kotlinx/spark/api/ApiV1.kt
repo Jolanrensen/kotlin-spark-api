@@ -238,6 +238,8 @@ inline fun <reified R> Dataset<*>.to(): Dataset<R> = `as`(encoder<R>())
 
 inline fun <reified T> Dataset<T>.forEach(noinline func: (T) -> Unit) = foreach(ForeachFunction(func))
 
+inline fun <reified T> Dataset<T>.forEachPartition(noinline func: (Iterator<T>) -> Unit) = foreachPartition(ForeachPartitionFunction(func))
+
 /**
  * It's hard to call `Dataset.debugCodegen` from kotlin, so here is utility for that
  */

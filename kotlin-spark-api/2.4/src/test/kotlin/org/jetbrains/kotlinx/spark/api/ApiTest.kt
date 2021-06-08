@@ -395,6 +395,17 @@ class ApiTest : ShouldSpec({
 
                 b.count() shouldBe 1
             }
+            should("Allow simple forEachPartition in datasets") {
+                val dataset = dsOf(
+                    SomeClass(intArrayOf(1, 2, 3), 1),
+                    SomeClass(intArrayOf(4, 3, 2), 1),
+                )
+                dataset.forEachPartition {
+                    it.forEach {
+                        it.b shouldBe  1
+                    }
+                }
+            }
         }
     }
 })
