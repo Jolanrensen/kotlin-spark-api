@@ -737,6 +737,16 @@ inline fun <reified T, reified U> col(column: KProperty1<T, U>): TypedColumn<T, 
 inline operator fun <reified T, reified U> Dataset<T>.invoke(column: KProperty1<T, U>): TypedColumn<T, U> = col(column)
 
 /**
+ * Allows to sort data class dataset on one or more of the properties of the data class.
+ * ```kotlin
+ * val sorted: Dataset<YourClass> = unsorted.sort(YourClass::a)
+ * val sorted2: Dataset<YourClass> = unsorted.sort(YourClass::a, YourClass::b)
+ * ```
+ */
+fun <T> Dataset<T>.sort(col: KProperty1<T, *>, vararg cols: KProperty1<T, *>): Dataset<T> =
+    sort(col.name, *cols.map { it.name }.toTypedArray())
+
+/**
  * Alternative to [Dataset.show] which returns source dataset.
  * Useful for debug purposes when you need to view content of a dataset as an intermediate operation
  */

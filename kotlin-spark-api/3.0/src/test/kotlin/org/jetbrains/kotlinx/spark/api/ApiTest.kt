@@ -460,6 +460,17 @@ class ApiTest : ShouldSpec({
 
                 dataset.count() shouldBe 1
             }
+            should("Be able to sort datasets with property reference") {
+                val dataset: Dataset<SomeClass> = dsOf(
+                    SomeClass(intArrayOf(1, 2, 3), 2),
+                    SomeClass(intArrayOf(4, 3, 2), 1),
+                )
+                dataset.sort(SomeClass::b)
+                dataset.takeAsList(1).first().b shouldBe 2
+
+                dataset.sort(SomeClass::a, SomeClass::b)
+                dataset.takeAsList(1).first().b shouldBe 2
+            }
         }
     }
 })
