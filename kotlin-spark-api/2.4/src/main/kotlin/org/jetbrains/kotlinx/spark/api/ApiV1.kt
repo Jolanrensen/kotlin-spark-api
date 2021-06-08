@@ -180,6 +180,22 @@ inline fun <reified KEY, reified VALUE> KeyValueGroupedDataset<KEY, VALUE>.reduc
         reduceGroups(ReduceFunction(func))
                 .map { t -> t._1 to t._2 }
 
+@JvmName("takeKeysTuple2")
+inline fun <reified T1, T2> Dataset<Tuple2<T1, T2>>.takeKeys(): Dataset<T1> = map { it._1() }
+
+inline fun <reified T1, T2> Dataset<Pair<T1, T2>>.takeKeys(): Dataset<T1> = map { it.first }
+
+@JvmName("takeKeysArity2")
+inline fun <reified T1, T2> Dataset<Arity2<T1, T2>>.takeKeys(): Dataset<T1> = map { it._1 }
+
+@JvmName("takeValuesTuple2")
+inline fun <T1, reified T2> Dataset<Tuple2<T1, T2>>.takeValues(): Dataset<T2> = map { it._2() }
+
+inline fun <T1, reified T2> Dataset<Pair<T1, T2>>.takeValues(): Dataset<T2> = map { it.second }
+
+@JvmName("takeValuesArity2")
+inline fun <T1, reified T2> Dataset<Arity2<T1, T2>>.takeValues(): Dataset<T2> = map { it._2 }
+
 inline fun <K, V, reified U> KeyValueGroupedDataset<K, V>.flatMapGroups(
     noinline func: (key: K, values: Iterator<V>) -> Iterator<U>
 ): Dataset<U> = flatMapGroups(

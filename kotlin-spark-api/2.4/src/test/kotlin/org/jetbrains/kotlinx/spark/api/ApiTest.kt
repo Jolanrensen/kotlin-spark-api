@@ -406,6 +406,17 @@ class ApiTest : ShouldSpec({
                     }
                 }
             }
+            should("Have easier access to keys and values for key/value datasets") {
+                val dataset: Dataset<SomeClass> = dsOf(
+                    SomeClass(intArrayOf(1, 2, 3), 1),
+                    SomeClass(intArrayOf(4, 3, 2), 1),
+                )
+                    .groupByKey { it.b }
+                    .reduceGroups(func = { a, b -> SomeClass(a.a + b.a, a.b) })
+                    .takeValues()
+
+                dataset.count() shouldBe 1
+            }
         }
     }
 })
