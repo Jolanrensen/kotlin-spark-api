@@ -10,11 +10,10 @@
     <packaging>pom</packaging>
 
     <properties>
-        <kotlin.version>1.4.21</kotlin.version>
-        <dokka.version>1.4.20</dokka.version>
+        <dokka.version>1.5.20</dokka.version>
         <atrium.version>0.13.0</atrium.version>
         <kotest.version>4.2.5</kotest.version>
-        <kotlin.version>1.4.21</kotlin.version>
+        <kotlin.version>1.5.20</kotlin.version>
         <spark2-scala-2.11.version>2.4.0</spark2-scala-2.11.version>
         <spark2-scala-2.12.version>2.4.1</spark2-scala-2.12.version>
         <spark3.version>3.0.0</spark3.version>
@@ -111,7 +110,7 @@
                             <phase>compile</phase>
                             <configuration>
                                 <myIncremental>true</myIncremental>
-                                <jvmTarget>1.8</jvmTarget>
+                                <jvmTarget>16</jvmTarget>
                                 <args>
                                     <arg>-Xopt-in=kotlin.RequiresOptIn</arg>
                                     <arg>-XXLanguage:+InlineClasses</arg>
@@ -126,7 +125,7 @@
                             <phase>test-compile</phase>
                             <configuration>
                                 <myIncremental>true</myIncremental>
-                                <jvmTarget>1.8</jvmTarget>
+                                <jvmTarget>16</jvmTarget>
                                 <args>
                                     <arg>-Xopt-in=kotlin.RequiresOptIn</arg>
                                     <arg>-XXLanguage:+InlineClasses</arg>
@@ -342,26 +341,26 @@
         </profile>
     </profiles>
 
-    <repositories>
-        <repository>
-            <id>central</id>
-            <name>Maven Central</name>
-            <layout>default</layout>
-            <url>https://repo1.maven.org/maven2</url>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-        </repository>
-    </repositories>
-    <pluginRepositories>
-        <pluginRepository>
-            <id>central</id>
-            <name>Maven Central</name>
-            <layout>default</layout>
-            <url>https://repo1.maven.org/maven2</url>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-        </pluginRepository>
-    </pluginRepositories>
+<!--    <repositories>-->
+<!--        <repository>-->
+<!--            <id>central</id>-->
+<!--            <name>Maven Central</name>-->
+<!--            <layout>default</layout>-->
+<!--            <url>https://repo1.maven.org/maven2</url>-->
+<!--            <snapshots>-->
+<!--                <enabled>false</enabled>-->
+<!--            </snapshots>-->
+<!--        </repository>-->
+<!--    </repositories>-->
+<!--    <pluginRepositories>-->
+<!--        <pluginRepository>-->
+<!--            <id>central</id>-->
+<!--            <name>Maven Central</name>-->
+<!--            <layout>default</layout>-->
+<!--            <url>https://repo1.maven.org/maven2</url>-->
+<!--            <snapshots>-->
+<!--                <enabled>false</enabled>-->
+<!--            </snapshots>-->
+<!--        </pluginRepository>-->
+<!--    </pluginRepositories>-->
 </project>
