@@ -32,6 +32,7 @@ import scala.*
 import scala.collection.Seq
 import scala.collection.TraversableOnce
 import scala.reflect.api.TypeTags
+import scala.runtime.BoxedUnit
 import kotlin.reflect.KProperty1
 
 class KDataset<T>(
@@ -580,6 +581,26 @@ class KDataset<T>(
 
     fun <U : Any?> transform(t: (KDataset<T>) -> KDataset<U>): KDataset<U> {
         return super.transform { t(it.toKotlin()) }.toKotlin()
+    }
+
+    @Deprecated("use forEach", ReplaceWith("forEach(f)"))
+    override fun foreach(f: Function1<T, BoxedUnit>?) {
+        super.foreach(f)
+    }
+
+    @Deprecated("use forEach", ReplaceWith("forEach(func)"))
+    override fun foreach(func: ForeachFunction<T>?) {
+        super.foreach(func)
+    }
+
+    @Deprecated("use forEachPartition", ReplaceWith("forEachPartition(f)"))
+    override fun foreachPartition(f: Function1<scala.collection.Iterator<T>, BoxedUnit>?) {
+        super.foreachPartition(f)
+    }
+
+    @Deprecated("use forEachPartition", ReplaceWith("forEachPartition(func)"))
+    override fun foreachPartition(func: ForeachPartitionFunction<T>?) {
+        super.foreachPartition(func)
     }
 
     fun forEach(func: (T) -> Unit) = foreach(ForeachFunction(func))
