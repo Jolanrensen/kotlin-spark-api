@@ -29,10 +29,8 @@ import org.apache.spark.sql.types.StructType
 import org.apache.spark.storage.StorageLevel
 import org.jetbrains.kotinx.spark.extensions.KSparkExtensions
 import scala.*
-import scala.Function2
 import scala.collection.Seq
 import scala.collection.TraversableOnce
-import scala.collection.immutable.List
 import scala.reflect.api.TypeTags
 import kotlin.reflect.KProperty1
 
@@ -505,21 +503,23 @@ class KDataset<T>(
         return cached.executeOnCached().also { cached.unpersist(blockingUnpersist) }
     }
 
-    override fun <A : Product> explode(
+    // TODO Kotlinify
+    fun <A : Product> explode(
         input: Seq<Column>,
-        f: Function1<Row, TraversableOnce<A>>,
-        `evidence$4`: TypeTags.TypeTag<A>,
+        f: (Row) -> TraversableOnce<A>,
+        evidence: TypeTags.TypeTag<A>,
     ): KDataset<Row> {
-        return super.explode(input, f, `evidence$4`).toKotlin()
+        return super.explode(input, Function1(f), evidence).toKotlin()
     }
 
-    override fun <A : Any?, B : Any?> explode(
+    // TODO Kotlinify
+    fun <A : Any?, B : Any?> explode(
         inputColumn: String,
         outputColumn: String,
-        f: Function1<A, TraversableOnce<B>>,
-        `evidence$5`: TypeTags.TypeTag<B>,
+        f: (A) -> TraversableOnce<B>,
+        evidence: TypeTags.TypeTag<B>,
     ): KDataset<Row> {
-        return super.explode(inputColumn, outputColumn, f, `evidence$5`).toKotlin()
+        return super.explode(inputColumn, outputColumn, Function1(f), evidence).toKotlin()
     }
 
     override fun withColumn(colName: String, col: Column): KDataset<Row> {
