@@ -134,20 +134,20 @@ inline fun <reified T> SparkContext.broadcast(value: T): Broadcast<T> = try {
 /**
  * Utility method to create dataset from list
  */
-inline fun <reified T> SparkSession.toDS(list: List<T>): Dataset<T> =
-    createDataset(list, encoder<T>())
+inline fun <reified T> SparkSession.toDS(list: List<T>): KDataset<T> =
+    createDataset(list, encoder<T>()).toKotlin()
 
 /**
  * Utility method to create dataset from list
  */
-inline fun <reified T> SparkSession.dsOf(vararg t: T): Dataset<T> =
-    createDataset(listOf(*t), encoder<T>())
+inline fun <reified T> SparkSession.dsOf(vararg t: T): KDataset<T> =
+    createDataset(listOf(*t), encoder<T>()).toKotlin()
 
 /**
  * Utility method to create dataset from list
  */
-inline fun <reified T> List<T>.toDS(spark: SparkSession): Dataset<T> =
-    spark.createDataset(this, encoder<T>())
+inline fun <reified T> List<T>.toDS(spark: SparkSession): KDataset<T> =
+    spark.createDataset(this, encoder<T>()).toKotlin()
 
 /**
  * Main method of API, which gives you seamless integration with Spark:
@@ -185,57 +185,58 @@ private fun <T> kotlinClassEncoder(schema: DataType, kClass: KClass<*>): Encoder
     )
 }
 
-inline fun <reified T, reified R> Dataset<T>.map(noinline func: (T) -> R): Dataset<R> =
-    map(MapFunction(func), encoder<R>())
+//inline fun <reified T, reified R> Dataset<T>.map(noinline func: (T) -> R): Dataset<R> =
+//    map(MapFunction(func), encoder<R>())
 
-inline fun <T, reified R> Dataset<T>.flatMap(noinline func: (T) -> Iterator<R>): Dataset<R> =
-    flatMap(func, encoder<R>())
+//inline fun <T, reified R> Dataset<T>.flatMap(noinline func: (T) -> Iterator<R>): Dataset<R> =
+//    flatMap(func, encoder<R>())
 
-inline fun <reified T, I : Iterable<T>> Dataset<I>.flatten(): Dataset<T> =
-    flatMap(FlatMapFunction { it.iterator() }, encoder<T>())
+inline fun <reified T, I : Iterable<T>> Dataset<I>.flatten(): KDataset<T> = toKotlin().flatMap { it.iterator() }
 
-inline fun <T, reified R> Dataset<T>.groupByKey(noinline func: (T) -> R): KeyValueGroupedDataset<R, T> =
-    groupByKey(MapFunction(func), encoder<R>())
+//inline fun <T, reified R> Dataset<T>.groupByKey(noinline func: (T) -> R): KeyValueGroupedDataset<R, T> =
+//    groupByKey(MapFunction(func), encoder<R>())
 
-inline fun <T, reified R> Dataset<T>.mapPartitions(noinline func: (Iterator<T>) -> Iterator<R>): Dataset<R> =
-    mapPartitions(func, encoder<R>())
+//inline fun <T, reified R> Dataset<T>.mapPartitions(noinline func: (Iterator<T>) -> Iterator<R>): Dataset<R> =
+//    mapPartitions(func, encoder<R>())
 
-fun <T> Dataset<T>.filterNotNull() = filter { it != null }
+fun <T> Dataset<T>.filterNotNull(): KDataset<T> = toKotlin().filter { it != null }
 
 inline fun <KEY, VALUE, reified R> KeyValueGroupedDataset<KEY, VALUE>.mapValues(noinline func: (VALUE) -> R): KeyValueGroupedDataset<KEY, R> =
     mapValues(MapFunction(func), encoder<R>())
 
-inline fun <KEY, VALUE, reified R> KeyValueGroupedDataset<KEY, VALUE>.mapGroups(noinline func: (KEY, Iterator<VALUE>) -> R): Dataset<R> =
-    mapGroups(MapGroupsFunction(func), encoder<R>())
+inline fun <KEY, VALUE, reified R> KeyValueGroupedDataset<KEY, VALUE>.mapGroups(noinline func: (KEY, Iterator<VALUE>) -> R): KDataset<R> =
+    mapGroups(MapGroupsFunction(func), encoder<R>()).toKotlin()
 
-inline fun <reified KEY, reified VALUE> KeyValueGroupedDataset<KEY, VALUE>.reduceGroupsK(noinline func: (VALUE, VALUE) -> VALUE): Dataset<Pair<KEY, VALUE>> =
+// TODO also override KeyValueGroupedDataset
+inline fun <reified KEY, reified VALUE> KeyValueGroupedDataset<KEY, VALUE>.reduceGroupsK(noinline func: (VALUE, VALUE) -> VALUE): KDataset<Pair<KEY, VALUE>> =
     reduceGroups(ReduceFunction(func))
+        .toKotlin()
         .map { t -> t._1 to t._2 }
 
 
 @JvmName("takeKeysTuple2")
-inline fun <reified T1, T2> Dataset<Tuple2<T1, T2>>.takeKeys(): Dataset<T1> = map { it._1() }
+inline fun <reified T1, T2> Dataset<Tuple2<T1, T2>>.takeKeys(): KDataset<T1> = toKotlin().map { it._1() }
 
-inline fun <reified T1, T2> Dataset<Pair<T1, T2>>.takeKeys(): Dataset<T1> = map { it.first }
+inline fun <reified T1, T2> Dataset<Pair<T1, T2>>.takeKeys(): KDataset<T1> = toKotlin().map { it.first }
 
 @JvmName("takeKeysArity2")
-inline fun <reified T1, T2> Dataset<Arity2<T1, T2>>.takeKeys(): Dataset<T1> = map { it._1 }
+inline fun <reified T1, T2> Dataset<Arity2<T1, T2>>.takeKeys(): KDataset<T1> = toKotlin().map { it._1 }
 
 @JvmName("takeValuesTuple2")
-inline fun <T1, reified T2> Dataset<Tuple2<T1, T2>>.takeValues(): Dataset<T2> = map { it._2() }
+inline fun <T1, reified T2> Dataset<Tuple2<T1, T2>>.takeValues(): KDataset<T2> = toKotlin().map { it._2() }
 
-inline fun <T1, reified T2> Dataset<Pair<T1, T2>>.takeValues(): Dataset<T2> = map { it.second }
+inline fun <T1, reified T2> Dataset<Pair<T1, T2>>.takeValues(): KDataset<T2> = toKotlin().map { it.second }
 
 @JvmName("takeValuesArity2")
-inline fun <T1, reified T2> Dataset<Arity2<T1, T2>>.takeValues(): Dataset<T2> = map { it._2 }
+inline fun <T1, reified T2> Dataset<Arity2<T1, T2>>.takeValues(): KDataset<T2> = toKotlin().map { it._2 }
 
 
 inline fun <K, V, reified U> KeyValueGroupedDataset<K, V>.flatMapGroups(
     noinline func: (key: K, values: Iterator<V>) -> Iterator<U>,
-): Dataset<U> = flatMapGroups(
+): KDataset<U> = flatMapGroups(
     FlatMapGroupsFunction(func),
     encoder<U>()
-)
+).toKotlin()
 
 fun <S> GroupState<S>.getOrNull(): S? = if (exists()) get() else null
 
@@ -245,64 +246,64 @@ operator fun <S> GroupState<S>.setValue(thisRef: Any?, property: KProperty<*>, v
 
 inline fun <K, V, reified S, reified U> KeyValueGroupedDataset<K, V>.mapGroupsWithState(
     noinline func: (key: K, values: Iterator<V>, state: GroupState<S>) -> U,
-): Dataset<U> = mapGroupsWithState(
+): KDataset<U> = mapGroupsWithState(
     MapGroupsWithStateFunction(func),
     encoder<S>(),
     encoder<U>()
-)
+).toKotlin()
 
 inline fun <K, V, reified S, reified U> KeyValueGroupedDataset<K, V>.mapGroupsWithState(
     timeoutConf: GroupStateTimeout,
     noinline func: (key: K, values: Iterator<V>, state: GroupState<S>) -> U,
-): Dataset<U> = mapGroupsWithState(
+): KDataset<U> = mapGroupsWithState(
     MapGroupsWithStateFunction(func),
     encoder<S>(),
     encoder<U>(),
     timeoutConf
-)
+).toKotlin()
 
 inline fun <K, V, reified S, reified U> KeyValueGroupedDataset<K, V>.flatMapGroupsWithState(
     outputMode: OutputMode,
     timeoutConf: GroupStateTimeout,
     noinline func: (key: K, values: Iterator<V>, state: GroupState<S>) -> Iterator<U>,
-): Dataset<U> = flatMapGroupsWithState(
+): KDataset<U> = flatMapGroupsWithState(
     FlatMapGroupsWithStateFunction(func),
     outputMode,
     encoder<S>(),
     encoder<U>(),
     timeoutConf
-)
+).toKotlin()
 
 inline fun <K, V, U, reified R> KeyValueGroupedDataset<K, V>.cogroup(
     other: KeyValueGroupedDataset<K, U>,
     noinline func: (key: K, left: Iterator<V>, right: Iterator<U>) -> Iterator<R>,
-): Dataset<R> = cogroup(
+): KDataset<R> = cogroup(
     other,
     CoGroupFunction(func),
     encoder<R>()
-)
+).toKotlin()
 
-inline fun <T, reified R> Dataset<T>.downcast(): Dataset<R> = `as`(encoder<R>())
-inline fun <reified R> Dataset<*>.`as`(): Dataset<R> = `as`(encoder<R>())
-inline fun <reified R> Dataset<*>.to(): Dataset<R> = `as`(encoder<R>())
+//inline fun <T, reified R> Dataset<T>.downcast(): Dataset<R> = `as`(encoder<R>())
+//inline fun <reified R> Dataset<*>.`as`(): Dataset<R> = `as`(encoder<R>())
+//inline fun <reified R> Dataset<*>.to(): Dataset<R> = `as`(encoder<R>())
 
-inline fun <reified T> Dataset<T>.forEach(noinline func: (T) -> Unit) = foreach(ForeachFunction(func))
+//inline fun <reified T> Dataset<T>.forEach(noinline func: (T) -> Unit) = foreach(ForeachFunction(func))
 
-inline fun <reified T> Dataset<T>.forEachPartition(noinline func: (Iterator<T>) -> Unit) =
-    foreachPartition(ForeachPartitionFunction(func))
+//inline fun <reified T> Dataset<T>.forEachPartition(noinline func: (Iterator<T>) -> Unit) =
+//    foreachPartition(ForeachPartitionFunction(func))
 
-/**
- * It's hard to call `Dataset.debugCodegen` from kotlin, so here is utility for that
- */
-fun <T> Dataset<T>.debugCodegen() = also { KSparkExtensions.debugCodegen(it) }
+///**
+// * It's hard to call `Dataset.debugCodegen` from kotlin, so here is utility for that
+// */
+//fun <T> Dataset<T>.debugCodegen() = also { KSparkExtensions.debugCodegen(it) }
 
 val SparkSession.sparkContext
     get() = KSparkExtensions.sparkContext(this)
 
-/**
- * It's hard to call `Dataset.debug` from kotlin, so here is utility for that
- */
-fun <T> Dataset<T>.debug() = also { KSparkExtensions.debug(it) }
+///**
+// * It's hard to call `Dataset.debug` from kotlin, so here is utility for that
+// */
+//fun <T> Dataset<T>.debug() = also { KSparkExtensions.debug(it) }
 
 @Suppress("FunctionName")
 @Deprecated("Changed to \"`===`\" to better reflect Scala API.", ReplaceWith("this `===` c"))
@@ -641,121 +642,121 @@ fun lit(a: Any) = functions.lit(a)
  * results into the correct JVM types.
  */
 inline fun <reified T> Column.`as`(): TypedColumn<Any, T> = `as`(encoder<T>())
+//
+///**
+// * Alias for [Dataset.joinWith] which passes "left" argument
+// * and respects the fact that in result of left join right relation is nullable
+// *
+// * @receiver left dataset
+// * @param right right dataset
+// * @param col join condition
+// *
+// * @return dataset of pairs where right element is forced nullable
+// */
+//inline fun <reified L, reified R : Any?> Dataset<L>.leftJoin(right: Dataset<R>, col: Column): Dataset<Pair<L, R?>> {
+//    return joinWith(right, col, "left").map { it._1 to it._2 }
+//}
+//
+///**
+// * Alias for [Dataset.joinWith] which passes "right" argument
+// * and respects the fact that in result of right join left relation is nullable
+// *
+// * @receiver left dataset
+// * @param right right dataset
+// * @param col join condition
+// *
+// * @return dataset of [Pair] where left element is forced nullable
+// */
+//inline fun <reified L : Any?, reified R> Dataset<L>.rightJoin(right: Dataset<R>, col: Column): Dataset<Pair<L?, R>> {
+//    return joinWith(right, col, "right").map { it._1 to it._2 }
+//}
+//
+///**
+// * Alias for [Dataset.joinWith] which passes "inner" argument
+// *
+// * @receiver left dataset
+// * @param right right dataset
+// * @param col join condition
+// *
+// * @return resulting dataset of [Pair]
+// */
+//inline fun <reified L, reified R> Dataset<L>.innerJoin(right: Dataset<R>, col: Column): Dataset<Pair<L, R>> {
+//    return joinWith(right, col, "inner").map { it._1 to it._2 }
+//}
+//
+///**
+// * Alias for [Dataset.joinWith] which passes "full" argument
+// * and respects the fact that in result of join any element of resulting tuple is nullable
+// *
+// * @receiver left dataset
+// * @param right right dataset
+// * @param col join condition
+// *
+// * @return dataset of [Pair] where both elements are forced nullable
+// */
+//inline fun <reified L : Any?, reified R : Any?> Dataset<L>.fullJoin(
+//    right: Dataset<R>,
+//    col: Column,
+//): Dataset<Pair<L?, R?>> {
+//    return joinWith(right, col, "full").map { it._1 to it._2 }
+//}
 
-/**
- * Alias for [Dataset.joinWith] which passes "left" argument
- * and respects the fact that in result of left join right relation is nullable
- *
- * @receiver left dataset
- * @param right right dataset
- * @param col join condition
- *
- * @return dataset of pairs where right element is forced nullable
- */
-inline fun <reified L, reified R : Any?> Dataset<L>.leftJoin(right: Dataset<R>, col: Column): Dataset<Pair<L, R?>> {
-    return joinWith(right, col, "left").map { it._1 to it._2 }
-}
+///**
+// * Alias for [Dataset.sort] which forces user to provide sorted columns from the source dataset
+// *
+// * @receiver source [Dataset]
+// * @param columns producer of sort columns
+// * @return sorted [Dataset]
+// */
+//inline fun <reified T> Dataset<T>.sort(columns: (Dataset<T>) -> Array<Column>) = sort(*columns(this))
+//
+///**
+// * This function creates block, where one can call any further computations on already cached dataset
+// * Data will be unpersisted automatically at the end of computation
+// *
+// * it may be useful in many situations, for example, when one needs to write data to several targets
+// * ```kotlin
+// * ds.withCached {
+// *   write()
+// *      .also { it.orc("First destination") }
+// *      .also { it.avro("Second destination") }
+// * }
+// * ```
+// *
+// * @param blockingUnpersist if execution should be blocked until everything persisted will be deleted
+// * @param executeOnCached Block which should be executed on cached dataset.
+// * @return result of block execution for further usage. It may be anything including source or new dataset
+// */
+//inline fun <reified T, R> Dataset<T>.withCached(
+//    blockingUnpersist: Boolean = false,
+//    executeOnCached: Dataset<T>.() -> R,
+//): R {
+//    val cached = this.cache()
+//    return cached.executeOnCached().also { cached.unpersist(blockingUnpersist) }
+//}
 
-/**
- * Alias for [Dataset.joinWith] which passes "right" argument
- * and respects the fact that in result of right join left relation is nullable
- *
- * @receiver left dataset
- * @param right right dataset
- * @param col join condition
- *
- * @return dataset of [Pair] where left element is forced nullable
- */
-inline fun <reified L : Any?, reified R> Dataset<L>.rightJoin(right: Dataset<R>, col: Column): Dataset<Pair<L?, R>> {
-    return joinWith(right, col, "right").map { it._1 to it._2 }
-}
-
-/**
- * Alias for [Dataset.joinWith] which passes "inner" argument
- *
- * @receiver left dataset
- * @param right right dataset
- * @param col join condition
- *
- * @return resulting dataset of [Pair]
- */
-inline fun <reified L, reified R> Dataset<L>.innerJoin(right: Dataset<R>, col: Column): Dataset<Pair<L, R>> {
-    return joinWith(right, col, "inner").map { it._1 to it._2 }
-}
-
-/**
- * Alias for [Dataset.joinWith] which passes "full" argument
- * and respects the fact that in result of join any element of resulting tuple is nullable
- *
- * @receiver left dataset
- * @param right right dataset
- * @param col join condition
- *
- * @return dataset of [Pair] where both elements are forced nullable
- */
-inline fun <reified L : Any?, reified R : Any?> Dataset<L>.fullJoin(
-    right: Dataset<R>,
-    col: Column,
-): Dataset<Pair<L?, R?>> {
-    return joinWith(right, col, "full").map { it._1 to it._2 }
-}
-
-/**
- * Alias for [Dataset.sort] which forces user to provide sorted columns from the source dataset
- *
- * @receiver source [Dataset]
- * @param columns producer of sort columns
- * @return sorted [Dataset]
- */
-inline fun <reified T> Dataset<T>.sort(columns: (Dataset<T>) -> Array<Column>) = sort(*columns(this))
-
-/**
- * This function creates block, where one can call any further computations on already cached dataset
- * Data will be unpersisted automatically at the end of computation
- *
- * it may be useful in many situations, for example, when one needs to write data to several targets
- * ```kotlin
- * ds.withCached {
- *   write()
- *      .also { it.orc("First destination") }
- *      .also { it.avro("Second destination") }
- * }
- * ```
- *
- * @param blockingUnpersist if execution should be blocked until everything persisted will be deleted
- * @param executeOnCached Block which should be executed on cached dataset.
- * @return result of block execution for further usage. It may be anything including source or new dataset
- */
-inline fun <reified T, R> Dataset<T>.withCached(
-    blockingUnpersist: Boolean = false,
-    executeOnCached: Dataset<T>.() -> R,
-): R {
-    val cached = this.cache()
-    return cached.executeOnCached().also { cached.unpersist(blockingUnpersist) }
-}
-
-inline fun <reified T> Dataset<Row>.toList() = KSparkExtensions.collectAsList(to<T>())
-inline fun <reified R> Dataset<*>.toArray(): Array<R> = to<R>().collect() as Array<R>
-
-/**
- * Selects column based on the column name and returns it as a [Column].
- *
- * @note The column name can also reference to a nested column like `a.b`.
- */
-operator fun <T> Dataset<T>.invoke(colName: String): Column = col(colName)
-
-/**
- * Helper function to quickly get a [TypedColumn] (or [Column]) from a dataset in a refactor-safe manner.
- * ```kotlin
- *    val dataset: Dataset<YourClass> = ...
- *    val columnA: TypedColumn<YourClass, TypeOfA> = dataset.col(YourClass::a)
- * ```
- * @see invoke
- */
-
-@Suppress("UNCHECKED_CAST")
-inline fun <reified T, reified U> Dataset<T>.col(column: KProperty1<T, U>): TypedColumn<T, U> =
-    col(column.name).`as`<U>() as TypedColumn<T, U>
+inline fun <reified T> Dataset<Row>.toList() = KSparkExtensions.collectAsList(toKotlin().to<T>())
+inline fun <reified R> Dataset<*>.toArray(): Array<R> = toKotlin().to<R>().collect() as Array<R>
+//
+///**
+// * Selects column based on the column name and returns it as a [Column].
+// *
+// * @note The column name can also reference to a nested column like `a.b`.
+// */
+//operator fun <T> Dataset<T>.invoke(colName: String): Column = col(colName)
+//
+///**
+// * Helper function to quickly get a [TypedColumn] (or [Column]) from a dataset in a refactor-safe manner.
+// * ```kotlin
+// *    val dataset: Dataset<YourClass> = ...
+// *    val columnA: TypedColumn<YourClass, TypeOfA> = dataset.col(YourClass::a)
+// * ```
+// * @see invoke
+// */
+//
+//@Suppress("UNCHECKED_CAST")
+//inline fun <reified T, reified U> Dataset<T>.col(column: KProperty1<T, U>): TypedColumn<T, U> =
+//    col(column.name).`as`<U>() as TypedColumn<T, U>
 
 /**
  * Returns a [Column] based on the given class attribute, not connected to a dataset.
@@ -769,73 +770,74 @@ inline fun <reified T, reified U> Dataset<T>.col(column: KProperty1<T, U>): Type
 inline fun <reified T, reified U> col(column: KProperty1<T, U>): TypedColumn<T, U> =
     functions.col(column.name).`as`<U>() as TypedColumn<T, U>
 
-/**
- * Helper function to quickly get a [TypedColumn] (or [Column]) from a dataset in a refactor-safe manner.
- * ```kotlin
- *    val dataset: Dataset<YourClass> = ...
- *    val columnA: TypedColumn<YourClass, TypeOfA> = dataset(YourClass::a)
- * ```
- * @see col
- */
-inline operator fun <reified T, reified U> Dataset<T>.invoke(column: KProperty1<T, U>): TypedColumn<T, U> = col(column)
+///**
+// * Helper function to quickly get a [TypedColumn] (or [Column]) from a dataset in a refactor-safe manner.
+// * ```kotlin
+// *    val dataset: Dataset<YourClass> = ...
+// *    val columnA: TypedColumn<YourClass, TypeOfA> = dataset(YourClass::a)
+// * ```
+// * @see col
+// */
+//inline operator fun <reified T, reified U> Dataset<T>.invoke(column: KProperty1<T, U>): TypedColumn<T, U> = col(column)
+//
+///**
+// * Allows to sort data class dataset on one or more of the properties of the data class.
+// * ```kotlin
+// * val sorted: Dataset<YourClass> = unsorted.sort(YourClass::a)
+// * val sorted2: Dataset<YourClass> = unsorted.sort(YourClass::a, YourClass::b)
+// * ```
+// */
+//fun <T> Dataset<T>.sort(col: KProperty1<T, *>, vararg cols: KProperty1<T, *>): Dataset<T> =
+//    sort(col.name, *cols.map { it.name }.toTypedArray())
 
-/**
- * Allows to sort data class dataset on one or more of the properties of the data class.
- * ```kotlin
- * val sorted: Dataset<YourClass> = unsorted.sort(YourClass::a)
- * val sorted2: Dataset<YourClass> = unsorted.sort(YourClass::a, YourClass::b)
- * ```
- */
-fun <T> Dataset<T>.sort(col: KProperty1<T, *>, vararg cols: KProperty1<T, *>): Dataset<T> =
-    sort(col.name, *cols.map { it.name }.toTypedArray())
-
-/**
- * Alternative to [Dataset.show] which returns source dataset.
- * Useful for debug purposes when you need to view content of a dataset as an intermediate operation
- */
-fun <T> Dataset<T>.showDS(numRows: Int = 20, truncate: Boolean = true) = apply { show(numRows, truncate) }
-
-/**
- * Returns a new Dataset by computing the given [Column] expressions for each element.
- */
-inline fun <reified T, reified U1, reified U2> Dataset<T>.selectTyped(
-    c1: TypedColumn<T, U1>,
-    c2: TypedColumn<T, U2>,
-): Dataset<Pair<U1, U2>> =
-    select(c1, c2).map { Pair(it._1(), it._2()) }
-
-/**
- * Returns a new Dataset by computing the given [Column] expressions for each element.
- */
-inline fun <reified T, reified U1, reified U2, reified U3> Dataset<T>.selectTyped(
-    c1: TypedColumn<T, U1>,
-    c2: TypedColumn<T, U2>,
-    c3: TypedColumn<T, U3>,
-): Dataset<Triple<U1, U2, U3>> =
-    select(c1, c2, c3).map { Triple(it._1(), it._2(), it._3()) }
-
-/**
- * Returns a new Dataset by computing the given [Column] expressions for each element.
- */
-inline fun <reified T, reified U1, reified U2, reified U3, reified U4> Dataset<T>.selectTyped(
-    c1: TypedColumn<T, U1>,
-    c2: TypedColumn<T, U2>,
-    c3: TypedColumn<T, U3>,
-    c4: TypedColumn<T, U4>,
-): Dataset<Arity4<U1, U2, U3, U4>> =
-    select(c1, c2, c3, c4).map { Arity4(it._1(), it._2(), it._3(), it._4()) }
-
-/**
- * Returns a new Dataset by computing the given [Column] expressions for each element.
- */
-inline fun <reified T, reified U1, reified U2, reified U3, reified U4, reified U5> Dataset<T>.selectTyped(
-    c1: TypedColumn<T, U1>,
-    c2: TypedColumn<T, U2>,
-    c3: TypedColumn<T, U3>,
-    c4: TypedColumn<T, U4>,
-    c5: TypedColumn<T, U5>,
-): Dataset<Arity5<U1, U2, U3, U4, U5>> =
-    select(c1, c2, c3, c4, c5).map { Arity5(it._1(), it._2(), it._3(), it._4(), it._5()) }
+///**
+// * Alternative to [Dataset.show] which returns source dataset.
+// * Useful for debug purposes when you need to view content of a dataset as an intermediate operation
+// */
+//fun <T> Dataset<T>.showDS(numRows: Int = 20, truncate: Boolean = true) = apply { show(numRows, truncate) }
+//
+///**
+// * Returns a new Dataset by computing the given [Column] expressions for each element.
+// */
+//inline fun <reified T, reified U1, reified U2> Dataset<T>.selectTyped(
+//    c1: TypedColumn<T, U1>,
+//    c2: TypedColumn<T, U2>,
+//): Dataset<Pair<U1, U2>> =
+//    select(c1, c2).map { Pair(it._1(), it._2()) }
+//
+///**
+// * Returns a new Dataset by computing the given [Column] expressions for each element.
+// */
+//inline fun <reified T, reified U1, reified U2, reified U3> Dataset<T>.selectTyped(
+//    c1: TypedColumn<T, U1>,
+//    c2: TypedColumn<T, U2>,
+//    c3: TypedColumn<T, U3>,
+//): Dataset<Triple<U1, U2, U3>> =
+//    select(c1, c2, c3).map {
+//        Triple(it._1(), it._2(), it._3()) }
+//
+///**
+// * Returns a new Dataset by computing the given [Column] expressions for each element.
+// */
+//inline fun <reified T, reified U1, reified U2, reified U3, reified U4> Dataset<T>.selectTyped(
+//    c1: TypedColumn<T, U1>,
+//    c2: TypedColumn<T, U2>,
+//    c3: TypedColumn<T, U3>,
+//    c4: TypedColumn<T, U4>,
+//): Dataset<Arity4<U1, U2, U3, U4>> =
+//    select(c1, c2, c3, c4).map { Arity4(it._1(), it._2(), it._3(), it._4()) }
+//
+///**
+// * Returns a new Dataset by computing the given [Column] expressions for each element.
+// */
+//inline fun <reified T, reified U1, reified U2, reified U3, reified U4, reified U5> Dataset<T>.selectTyped(
+//    c1: TypedColumn<T, U1>,
+//    c2: TypedColumn<T, U2>,
+//    c3: TypedColumn<T, U3>,
+//    c4: TypedColumn<T, U4>,
+//    c5: TypedColumn<T, U5>,
+//): Dataset<Arity5<U1, U2, U3, U4, U5>> =
+//    select(c1, c2, c3, c4, c5).map { Arity5(it._1(), it._2(), it._3(), it._4(), it._5()) }
 
 
 @OptIn(ExperimentalStdlibApi::class)

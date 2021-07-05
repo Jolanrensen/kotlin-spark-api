@@ -29,6 +29,7 @@ fun main() {
         spark
                 .read()
                 .textFile(this::class.java.classLoader.getResource("the-catcher-in-the-rye.txt")?.path)
+                .toKotlin()
                 .map { it.split(Regex("\\s")) }
                 .flatten()
                 .cleanup()
@@ -41,7 +42,7 @@ fun main() {
     }
 }
 
-fun Dataset<String>.cleanup() =
+fun KDataset<String>.cleanup() =
         filter { it.isNotBlank() }
                 .map { it.trim(',', ' ', '\n', ':', '.', ';', '?', '!', '"', '\'', '\t', '　') }
                 .filter { !it.endsWith("n’t") }

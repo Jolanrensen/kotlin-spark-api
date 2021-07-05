@@ -317,15 +317,15 @@ class ApiTest : ShouldSpec({
                 cogrouped.count() shouldBe 4
             }
             should("handle LocalDate Datasets") { // uses encoder
-                val dataset: Dataset<LocalDate> = dsOf(LocalDate.now(), LocalDate.now())
+                val dataset: KDataset<LocalDate> = dsOf(LocalDate.now(), LocalDate.now())
                 dataset.show()
             }
             should("handle Instant Datasets") { // uses encoder
-                val dataset: Dataset<Instant> = dsOf(Instant.now(), Instant.now())
+                val dataset: KDataset<Instant> = dsOf(Instant.now(), Instant.now())
                 dataset.show()
             }
             should("be able to serialize Date") { // uses knownDataTypes
-                val dataset: Dataset<Pair<Date, Int>> = dsOf(Date.valueOf("2020-02-10") to 5)
+                val dataset: KDataset<Pair<Date, Int>> = dsOf(Date.valueOf("2020-02-10") to 5)
                 dataset.show()
             }
             should("handle Timestamp Datasets") { // uses encoder
@@ -494,18 +494,18 @@ class ApiTest : ShouldSpec({
                 }
             }
             should("Have easier access to keys and values for key/value datasets") {
-                val dataset: Dataset<SomeClass> = dsOf(
+                val dataset: KDataset<SomeClass> = dsOf(
                     SomeClass(intArrayOf(1, 2, 3), 1),
                     SomeClass(intArrayOf(4, 3, 2), 1),
                 )
                     .groupByKey { it.b }
-                    .reduceGroupsK(func = { a, b -> SomeClass(a.a + b.a, a.b) })
+                    .reduceGroupsK { a, b -> SomeClass(a.a + b.a, a.b) }
                     .takeValues()
 
                 dataset.count() shouldBe 1
             }
             should("Be able to sort datasets with property reference") {
-                val dataset: Dataset<SomeClass> = dsOf(
+                val dataset: KDataset<SomeClass> = dsOf(
                     SomeClass(intArrayOf(1, 2, 3), 2),
                     SomeClass(intArrayOf(4, 3, 2), 1),
                 )
