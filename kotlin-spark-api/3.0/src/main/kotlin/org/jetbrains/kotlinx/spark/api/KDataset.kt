@@ -1,3 +1,22 @@
+/*-
+ * =LICENSE=
+ * Kotlin Spark API: API for Spark 3.0+ (Scala 2.12)
+ * ----------
+ * Copyright (C) 2019 - 2021 JetBrains
+ * ----------
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * =LICENSEEND=
+ */
 package org.jetbrains.kotlinx.spark.api
 
 
@@ -379,10 +398,6 @@ class KDataset<T>(
         return groupByKey(MapFunction(func), encoder<K>())
     }
 
-    override fun <K : Any?> groupByKey(func: MapFunction<T, K>, encoder: Encoder<K>): KeyValueGroupedDataset<K, T> {
-        return super.groupByKey(func, encoder)
-    }
-
     override fun agg(aggExpr: Tuple2<String, String>, aggExprs: Seq<Tuple2<String, String>>): KDataset<Row> {
         return super.agg(aggExpr, aggExprs).toKotlin()
     }
@@ -572,13 +587,8 @@ class KDataset<T>(
     fun forEachPartition(func: (Iterator<T>) -> Unit) =
         foreachPartition(ForeachPartitionFunction(func))
 
-
-    override fun filter(func: Function1<T, Any>): KDataset<T> {
-        return super.filter(func).toKotlin()
-    }
-
-    override fun filter(func: FilterFunction<T>): KDataset<T> {
-        return super.filter(func).toKotlin()
+    fun filter(func: (T) -> Boolean): KDataset<T> {
+        return super.filter(FilterFunction(func)).toKotlin()
     }
 
     inline fun <reified U> map(noinline func: (T) -> U): KDataset<U> {
@@ -589,10 +599,6 @@ class KDataset<T>(
         noinline func: (Iterator<T>) -> Iterator<U>,
     ): KDataset<U> {
         return mapPartitions(MapPartitionsFunction(func), encoder<U>()).toKotlin()
-    }
-
-    override fun <U : Any?> mapPartitions(f: MapPartitionsFunction<T, U>, encoder: Encoder<U>): KDataset<U> {
-        return super.mapPartitions(f, encoder).toKotlin()
     }
 
     override fun mapPartitionsInR(
