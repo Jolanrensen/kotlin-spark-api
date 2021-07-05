@@ -581,11 +581,11 @@ class KDataset<T>(
         return super.filter(func).toKotlin()
     }
 
-    inline fun <reified U : Any?> map(noinline func: (T) -> U): KDataset<U> {
+    inline fun <reified U> map(noinline func: (T) -> U): KDataset<U> {
         return map(MapFunction(func), encoder<U>()).toKotlin()
     }
 
-    inline fun <reified U : Any?> mapPartitions(
+    inline fun <reified U> mapPartitions(
         noinline func: (Iterator<T>) -> Iterator<U>,
     ): KDataset<U> {
         return mapPartitions(MapPartitionsFunction(func), encoder<U>()).toKotlin()
