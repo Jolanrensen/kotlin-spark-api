@@ -418,31 +418,31 @@ class KDataset<T>(
         return super.limit(n).toKotlin()
     }
 
-    fun <R : Dataset<T>> union(other: R): KDataset<T> {
+    override fun union(other: Dataset<T>): KDataset<T> {
         return super.union(other).toKotlin()
     }
 
-    fun <R : Dataset<T>> unionAll(other: R): KDataset<T> {
+    override fun unionAll(other: Dataset<T>): KDataset<T> {
         return super.unionAll(other).toKotlin()
     }
 
-    fun <R : Dataset<T>> unionByName(other: R): KDataset<T> {
+    override fun unionByName(other: Dataset<T>): KDataset<T> {
         return super.unionByName(other).toKotlin()
     }
 
-    fun <R : Dataset<T>> intersect(other: R): KDataset<T> {
+    override fun intersect(other: Dataset<T>): KDataset<T> {
         return super.intersect(other).toKotlin()
     }
 
-    fun <R : Dataset<T>> intersectAll(other: R): KDataset<T> {
+    override fun intersectAll(other: Dataset<T>): KDataset<T> {
         return super.intersectAll(other).toKotlin()
     }
 
-    fun <R : Dataset<T>> except(other: R): KDataset<T> {
+    override fun except(other: Dataset<T>): KDataset<T> {
         return super.except(other).toKotlin()
     }
 
-    fun <R : Dataset<T>> exceptAll(other: R): KDataset<T> {
+    override fun exceptAll(other: Dataset<T>): KDataset<T> {
         return super.exceptAll(other).toKotlin()
     }
 
